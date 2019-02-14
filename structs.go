@@ -1,5 +1,10 @@
 package alldebrid
 
+import (
+	"encoding/json"
+	"time"
+)
+
 // LoginResponse ...
 type LoginResponse struct {
 	Success bool   `json:"success"`
@@ -7,15 +12,29 @@ type LoginResponse struct {
 	User    User   `json:"user"`
 }
 
+type timeFromInt struct {
+	time.Time
+}
+
+func (obj *timeFromInt) UnmarshalJSON(data []byte) error {
+	var x int64
+	if err := json.Unmarshal(data, &x); err != nil {
+		return err
+	}
+	t := time.Unix(x, 0)
+	obj.Time = t
+	return nil
+}
+
 // User ...
 type User struct {
-	Username             string `json:"username"`
-	Email                string `json:"email"`
-	IsPremium            bool   `json:"isPremium"`
-	PremiumUntil         int    `json:"premiumUntil"`
-	Lang                 string `json:"lang"`
-	PreferedDomain       string `json:"preferedDomain"`
-	LimitedHostersQuotas Quotas `json:"limitedHostersQuotas"`
+	Username             string      `json:"username"`
+	Email                string      `json:"email"`
+	IsPremium            bool        `json:"isPremium"`
+	PremiumUntil         timeFromInt `json:"premiumUntil"`
+	Lang                 string      `json:"lang"`
+	PreferedDomain       string      `json:"preferedDomain"`
+	LimitedHostersQuotas Quotas      `json:"limitedHostersQuotas"`
 }
 
 // Quotas ...
