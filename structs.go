@@ -43,3 +43,19 @@ type Quotas struct {
 	OtherHost int64 `json:"otherHost"`
 	OneLast   int64 `json:"oneLast"`
 }
+
+// LinkUnlockResponse ...
+type LinkUnlockResponse struct {
+	Success bool  `json:"success"`
+	Infos   Infos `json:"infos"`
+}
+
+// Infos ...
+type Infos struct {
+	Link      string      `json:"link"`
+	Host      string      `json:"host"`
+	Filename  string      `json:"filename"`
+	Streaming interface{} `json:"streaming"`
+	Paws      bool        `json:"paws"`
+	Filesize  string      `json:"filesize"`
+}
