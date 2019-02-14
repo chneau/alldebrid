@@ -57,5 +57,5 @@ type Infos struct {
 	Filename  string      `json:"filename"`
 	Streaming interface{} `json:"streaming"`
 	Paws      bool        `json:"paws"`
-	Filesize  string      `json:"filesize"`
+	// Filesize  int         `json:"filesize"` // TODO: needs investigation
 }
