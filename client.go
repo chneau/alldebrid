@@ -2,9 +2,9 @@ package alldebrid
 
 import (
 	"encoding/json"
-	"errors"
-	"log"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type k map[string]string // aliasing
@@ -29,41 +29,62 @@ func (c *Client) buildReq(path string, queries k) *http.Request {
 	return req
 }
 
-// Connect connects to get the token
-func (c *Client) Connect(username, password string) (*LoginResponse, error) {
-	res, err := c.HTTPClient.Do(c.buildReq("user/login", k{"username": username, "password": password}))
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-	loginResponse := &LoginResponse{}
-	err = json.NewDecoder(res.Body).Decode(loginResponse)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-	if loginResponse.Error != nil {
-		log.Println(err)
-		return nil, errors.New(*loginResponse.Error)
-	}
-	c.Token = loginResponse.Token
-	return loginResponse, nil
-}
-
 // GetDownloadLink ...
-func (c *Client) GetDownloadLink(link string) (*LinkUnlockResponse, error) {
+func (c *Client) GetDownloadLink(link string) (*LinkUnlock, error) {
 	res, err := c.HTTPClient.Do(c.buildReq("link/unlock", k{"link": link}))
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
-	linkUnlockResponse := &LinkUnlockResponse{}
-	err = json.NewDecoder(res.Body).Decode(linkUnlockResponse)
+	linkUnlock := &LinkUnlock{}
+	err = json.NewDecoder(res.Body).Decode(linkUnlock)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
-	return linkUnlockResponse, nil
+	if linkUnlock.Error != nil {
+		return nil, errors.New(*linkUnlock.Error)
+	}
+	return linkUnlock, nil
+}
+
+// GetPin ...
+func (c *Client) GetPin() (*Pin, error) {
+	res, err := c.HTTPClient.Do(c.buildReq("pin/get", k{}))
+	if err != nil {
+		return nil, err
+	}
+	pin := &Pin{}
+	err = json.NewDecoder(res.Body).Decode(pin)
+	if err != nil {
+		return nil, err
+	}
+	if pin.Error != nil {
+		return nil, errors.New(*pin.Error)
+	}
+	return pin, nil
+}
+
+// CheckPin ...
+func (c *Client) CheckPin(pin *Pin) error {
+	res, err := c.HTTPClient.Get(pin.CheckURL)
+	if err != nil {
+		return err
+	}
+	token := &struct {
+		Success   bool    `json:"success,omitempty"`
+		Token     string  `json:"token,omitempty"`
+		Activated bool    `json:"activated,omitempty"`
+		ExpiresIn int64   `json:"expires_in,omitempty"`
+		Error     *string `json:"error,omitempty"`
+	}{}
+	err = json.NewDecoder(res.Body).Decode(token)
+	if err != nil {
+		return err
+	}
+	if token.Error != nil {
+		return errors.New(*token.Error)
+	}
+	c.Token = token.Token
+	return nil
 }
 
 // New returns an instance of the client.
@@ -73,4 +94,28 @@ func New() *Client {
 		Agent:      "A Go client",
 		HTTPClient: http.DefaultClient,
 	}
+}
+
+// LinkUnlock ...
+type LinkUnlock struct {
+	Success bool `json:"success,omitempty"`
+	Infos   struct {
+		Link      string      `json:"link,omitempty"`
+		Host      string      `json:"host,omitempty"`
+		Filename  string      `json:"filename,omitempty"`
+		Streaming interface{} `json:"streaming,omitempty"`
+		Paws      bool        `json:"paws,omitempty"`
+	} `json:"infos,omitempty"`
+	Error *string `json:"error,omitempty"`
+}
+
+// Pin ...
+type Pin struct {
+	Success   bool    `json:"success,omitempty"`
+	Pin       string  `json:"pin,omitempty"`
+	ExpiredIn int64   `json:"expired_in,omitempty"`
+	UserURL   string  `json:"user_url,omitempty"`
+	BaseURL   string  `json:"base_url,omitempty"`
+	CheckURL  string  `json:"check_url,omitempty"`
+	Error     *string `json:"error,omitempty"`
 }
