@@ -2,6 +2,7 @@ package alldebrid
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 )
@@ -40,6 +41,10 @@ func (c *Client) Connect(username, password string) (*LoginResponse, error) {
 	if err != nil {
 		log.Println(err)
 		return nil, err
+	}
+	if loginResponse.Error != nil {
+		log.Println(err)
+		return nil, errors.New(*loginResponse.Error)
 	}
 	c.Token = loginResponse.Token
 	return loginResponse, nil
