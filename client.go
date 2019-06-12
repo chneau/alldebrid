@@ -91,7 +91,7 @@ func (c *Client) CheckPin(pin *Pin) error {
 func New() *Client {
 	return &Client{
 		Base:       "https://api.alldebrid.com/",
-		Agent:      "A Go client",
+		Agent:      "GoClient",
 		HTTPClient: http.DefaultClient,
 	}
 }
